@@ -1,26 +1,62 @@
+import 'dart:io';
+import 'dart:ui';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_project_test/services/database_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path_provider_android/path_provider_android.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'home_page_screen.dart';
 
 Future<void> _backgroundHandler(RemoteMessage message) async {
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    const int _version = 1;
+    const String _dbName = "Notification.db";
+
+    ///DartPluginRegistrant.ensureInitialized();
+    PathProviderAndroid.registerWith();
+    // final Directory appDocumentsDirector =
+    //     await getApplicationDocumentsDirectory();
+    //final db = DatabaseHelper.getDB();
+    Directory appDirectory = await getApplicationDocumentsDirectory();
+    String path = join(appDirectory.path, _dbName);
+    var db = await openDatabase(
+      path,
+      version: 1,
+      onCreate: (db, version) async => await db.execute(
+        'CREATE TABLE notification_message ('
+        'id integer primary key autoincrement, '
+        'title text, '
+        'message text, '
+        'topic text '
+        ')',
+      ),
+    );
+    // db.insert("notification_message", message.notification!.title,
+    //     conflictAlgorithm: ConflictAlgorithm.replace);
+    print(
+        '---------------------------Execute: onBackgroundMessage()---------------------------');
+    print(message.notification!.title ?? '');
+    print(message.notification!.body ?? '');
+  } catch (e) {
+    print(e.toString());
+  }
   // IsolateNameServer.lookupPortByName('main_port')?.send(message);
 
   // final Database db = await CtsIShoutDatabase().initDB();
   // await db.insert('notification', message.toMap(),
   //     conflictAlgorithm: ConflictAlgorithm.replace);
   // return Future<void>.value();
-  final db = DatabaseHelper.getDB();
-  db.insert("notification_message", message.notification!.title,
-      conflictAlgorithm: ConflictAlgorithm.replace);
+  // final db = DatabaseHelper.getDB();
 
-  print(
-      '---------------------------Execute: onBackgroundMessage()---------------------------');
-  print(message.notification!.title ?? '');
-  print(message.notification!.body ?? '');
+  // print('---------------------------Execute: onBackgroundMessage()---------------------------');
+  //  print(message.notification!.title ?? '');
+  //  print(message.notification!.body ?? '');
   return Future<void>.value();
 }
 

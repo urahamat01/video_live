@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../models/notification_model.dart';
@@ -6,6 +9,24 @@ import '../models/notification_model.dart';
 class DatabaseHelper {
   static const int _version = 1;
   static const String _dbName = "Notification.db";
+
+  Future<Database> initDB() async {
+    Directory appDirectory = await getApplicationDocumentsDirectory();
+    String path = join(appDirectory.path, _dbName);
+    var db = await openDatabase(
+      path,
+      version: 1,
+      onCreate: (db, version) async => await db.execute(
+        'CREATE TABLE notification_message ('
+        'id integer primary key autoincrement, '
+        'title text, '
+        'message text, '
+        'topic text '
+        ')',
+      ),
+    );
+    return db;
+  }
 
   static getDB() async {
     return openDatabase(
